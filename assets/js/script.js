@@ -8,12 +8,28 @@ document.getElementById("status").addEventListener("click", e => getStatus(e));
 document.getElementById("submit").addEventListener("click", e => postForm(e));
 
 
+function processOptions(form) {
+    let optArray = [];
+
+    for (let entry of form.entries()) {
+        if (entry[0] === "options") {
+            optArray.push(entry[1]);
+        }
+    }
+    form.delete("options");
+
+    form.append("options", optArray.join());
+
+    return form;
+}
+
+
 async function postForm(e) {
-    const form = new FormData(document.getElementById("checksform"));
+    const form = processOptions(new FormData(document.getElementById("checksform")));
 
     // The for below will iterate in all the info that we want to post. 
     // for (let e of form.entries()) {
-    //     console.log(e)
+    //     console.log(e);
     // }
 
     const response = await fetch(API_URL, {
@@ -30,6 +46,7 @@ async function postForm(e) {
     if (response.ok) {
         displayError(data);
     } else {
+        displayException(data);
         throw new Error(data.error);
     }
 }
@@ -65,6 +82,7 @@ async function getStatus(e) {
     if (response.ok) {
         displayStatus(data);
     } else {
+        displayException(data);
         throw new Error(data.error);
     }
 }
@@ -73,6 +91,18 @@ function displayStatus(data) {
     let title = "API Key Status";
     let results = `<div>Your key is valid until:</div>`;
     results += `<div class="key-status">${data.expiry}</div>`;
+
+    document.getElementById("resultsModalTitle").innerText = title;
+    document.getElementById("results-content").innerHTML = results;
+    resultsModal.show();
+}
+
+function displayException(data) {
+    let heading = `An Exception Occurred!`;
+
+    results = `<div>The API returned status code ${data.status_code}</div>`;
+    results += `<div>Error Number: <strong>${data.error_no}</strong></div>`;
+    results += `<div>Error text: <strong>${data.error}</strong></div>`;
 
     document.getElementById("resultsModalTitle").innerText = title;
     document.getElementById("results-content").innerHTML = results;
